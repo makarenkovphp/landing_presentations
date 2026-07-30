@@ -3,8 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\Contact;
+use App\Exception\NotFoundHttpException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\EntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 class ContactRepository extends ServiceEntityRepository
@@ -17,5 +17,20 @@ class ContactRepository extends ServiceEntityRepository
     public function add(Contact $contact): void
     {
         $this->getEntityManager()->persist($contact);
+    }
+
+    public function getById(int $id): Contact
+    {
+        $contact = $this->find($id);
+        if (null === $contact) {
+            throw new NotFoundHttpException('Contact not found');
+        }
+
+        return $contact;
+    }
+
+    public function findById(int $id): ?Contact
+    {
+         return $this->find($id);
     }
 }

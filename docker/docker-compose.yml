@@ -22,6 +22,7 @@ services:
             RDMS_DB_PASSWORD: ${RDMS_DB_PASSWORD}
             RDMS_DB_USER: ${RDMS_DB_USER}
             DATABASE_URL: "postgresql://${RDMS_DB_USER}:${RDMS_DB_PASSWORD}@${RDMS_HOSTNAME}:5432/${RDMS_DB_NAME}?serverVersion=17&charset=utf8"
+            REDIS_DSN: "redis://${CACHE_HOSTNAME}:6379"
         extra_hosts:
             - "host.docker.internal:host-gateway"
         depends_on:
@@ -67,5 +68,26 @@ services:
         volumes:
             - postgres_data:/var/lib/postgresql/data
 
+    mailer:
+        container_name: ${MAILER_CONTAINER_NAME}
+        hostname: ${MAILER_HOSTNAME}
+        image: axllent/mailpit
+        ports:
+            - "1025:1025"
+            - "8025:8025"
+        environment:
+            MP_SMTP_AUTH_ACCEPT_ANY: 1
+            MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+    cache:
+        container_name: ${CACHE_CONTAINER_NAME}
+        hostname: ${CACHE_HOSTNAME}
+        image: redis:8-alpine
+        ports:
+            - "6379:6379"
+        volumes:
+            - redis_data:/data
+
 volumes:
     postgres_data:
+    redis_data:
