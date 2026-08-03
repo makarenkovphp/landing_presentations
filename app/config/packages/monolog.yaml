@@ -1,6 +1,7 @@
 monolog:
     channels:
         - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
+        - api_requests
 
 when@dev:
     monolog:
@@ -9,11 +10,16 @@ when@dev:
                 type: stream
                 path: "%kernel.logs_dir%/%kernel.environment%.log"
                 level: debug
-                channels: ["!event"]
+                channels: ["!event", "!api_requests"]
+            api_requests:
+                type: stream
+                path: "%kernel.logs_dir%/requests.log"
+                level: info
+                channels: ["api_requests"]
             console:
                 type: console
                 process_psr_3_messages: false
-                channels: ["!event", "!doctrine", "!console"]
+                channels: ["!event", "!doctrine", "!console", "!api_requests"]
 
 when@test:
     monolog:

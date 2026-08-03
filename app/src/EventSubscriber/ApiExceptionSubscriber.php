@@ -2,6 +2,7 @@
 
 namespace App\EventSubscriber;
 
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
@@ -11,6 +12,11 @@ use Symfony\Component\Validator\Exception\ValidationFailedException;
 
 final class ApiExceptionSubscriber implements EventSubscriberInterface
 {
+    public function __construct(
+        private LoggerInterface $apiRequestsLogger,
+    ) {
+    }
+
     public static function getSubscribedEvents(): array
     {
         return [
@@ -21,6 +27,17 @@ final class ApiExceptionSubscriber implements EventSubscriberInterface
     public function onException(ExceptionEvent $event): void
     {
         $e = $event->getThrowable();
+
+        $request = $event->getRequest();
+
+        // Логируем любую ошибку
+        $this->apiRequestsLogger->error('API exception', [
+            'method' => $request->getMethod(),
+            'uri' => $request->getUri(),
+            'ip' => $request->getClientIp(),
+            'exception' => get_class($e),
+            'message' => $e->getMessage(),
+        ]);
 
         // Ошибки валидации MapRequestPayload
         $validationException = $e;
