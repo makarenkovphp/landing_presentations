@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-
 use App\Dto\ContactCreatingDto;
 use App\Service\ContactService;
 use App\View\ContactCreatingView;
@@ -20,6 +19,8 @@ class ContactController extends BaseController
 {
     public function __construct(
         private ContactService $service,
+        #[Target('api_limiter')]
+        private RateLimiterFactoryInterface $rateLimiter,
     )
     {
     }
@@ -28,9 +29,8 @@ class ContactController extends BaseController
     public function create(
         #[MapRequestPayload] ContactCreatingDto $dto,
         Request $request,
-        #[Target('api_limiter')] RateLimiterFactoryInterface $rateLimiter,
     ): Response {
-        $limiter = $rateLimiter->create($request->getClientIp());
+        $limiter = $this->rateLimiter->create($request->getClientIp());
 
         if (false === $limiter->consume(1)->isAccepted()) {
             throw new TooManyRequestsHttpException();
@@ -38,6 +38,8 @@ class ContactController extends BaseController
 
         $contact = $this->service->create($dto);
 
-        return $this->json((new ContactCreatingView($contact))->toArray());
+        return $this->createdResponse(
+            (new ContactCreatingView($contact))->toArray()
+        );
     }
 }
